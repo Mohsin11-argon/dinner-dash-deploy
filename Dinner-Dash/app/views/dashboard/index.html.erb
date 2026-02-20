@@ -1,0 +1,36 @@
+<% content_for :title, 'Dashboard | Dinner Dash' %>
+
+<div class="p-4 min-h-screen">
+  <h1 class="text-2xl font-bold bruno mb-8">Dashboard</h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+    <%= render 'stat_card', title: 'Pending Orders', value: @stats[:orders][:ordered], icon: 'fa-regular fa-clock', icon_bg: 'bg-blue-100', icon_color: 'text-blue-600' %>
+
+    <%= render 'stat_card', title: 'Completed Orders', value: @stats[:orders][:completed], icon: 'fa-regular fa-check-circle', icon_bg: 'bg-blue-100', icon_color: 'text-blue-600' %>
+
+    <%= render 'stat_card', title: 'Paid Orders', value: @stats[:orders][:paid], icon: 'fa-regular fa-credit-card', icon_bg: 'bg-blue-100', icon_color: 'text-blue-600' %>
+
+    <%= render 'stat_card', title: 'Cancelled Orders', value: @stats[:orders][:cancelled], icon: 'fa-solid fa-xmark', icon_bg: 'bg-green-100', icon_color: 'text-green-600' %>
+
+    <%= render 'stat_card', title: 'Total Customers', value: @stats[:customers][:total], icon: 'fa-regular fa-user', icon_bg: 'bg-blue-100', icon_color: 'text-blue-600' %>
+
+    <%= render 'stat_card', title: 'Total Revenue', value: number_to_currency(@stats[:revenue][:total], unit: '$'), icon: 'fa-solid fa-dollar-sign', icon_bg: 'bg-yellow-100', icon_color: 'text-yellow-600' %>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-md p-6">
+    <h2 class="text-xl font-semibold mb-4">Latest Customers</h2>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-left divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <%= render partial: 'shared/table_header', collection: user_table_headers %>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <%= render partial: 'dashboard/user', collection: @stats[:customers][:latest] %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

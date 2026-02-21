@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "build": "npm run build:react",
     "build:react": "esbuild app/javascript/react/App.jsx --bundle --sourcemap --outfile=app/assets/builds/App.js",
     "build:react:watch": "esbuild app/javascript/react/App.jsx --bundle --sourcemap --outfile=app/assets/builds/App.js --watch"
 },

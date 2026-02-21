@@ -1,10 +1,10 @@
-# ---------- Base Ruby Image ----------
+# -------- Base Image --------
 ARG RUBY_VERSION=3.2.3
 FROM ruby:${RUBY_VERSION}-slim AS base
 
 WORKDIR /rails
 
-# Install runtime dependencies
+# Runtime deps
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     curl libjemalloc2 libvips postgresql-client && \
@@ -15,10 +15,10 @@ ENV RAILS_ENV=production \
     BUNDLE_PATH=/usr/local/bundle \
     BUNDLE_WITHOUT=development:test
 
-# ---------- Build Stage ----------
+# -------- Build Stage --------
 FROM base AS build
 
-# Install build dependencies + Node 20
+# Build deps + Node 20
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     build-essential git libpq-dev libyaml-dev pkg-config curl && \
@@ -26,36 +26,38 @@ RUN apt-get update -qq && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-# Confirm versions (debug safety)
-RUN node -v && npm -v
+WORKDIR /rails
 
-# Install JS dependencies first (cache friendly)
-COPY package.json package-lock.json* ./
-RUN npm install
-
-# Install Ruby gems
-COPY Gemfile Gemfile.lock ./
-RUN bundle install
-
-# Copy full app
+# Copy full project
 COPY . .
 
-# Build React / JS
+# Verify scripts exist (safe guard)
+RUN cat package.json
+
+# Install JS dependencies
+RUN npm install
+
+# Build JS (esbuild)
 RUN npm run build
+
+# Install Ruby gems
+RUN bundle install
 
 # Precompile Rails assets
 RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
 
-# ---------- Final Production Image ----------
+# -------- Final Production Image --------
 FROM base
+
+WORKDIR /rails
 
 # Copy gems
 COPY --from=build /usr/local/bundle /usr/local/bundle
 
-# Copy app with built assets
+# Copy app (with built assets)
 COPY --from=build /rails /rails
 
-# Create non-root user
+# Non-root user
 RUN useradd rails --create-home --shell /bin/bash && \
     chown -R rails:rails /rails
 USER rails

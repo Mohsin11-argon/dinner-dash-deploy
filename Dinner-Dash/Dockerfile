@@ -4,6 +4,7 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 WORKDIR /rails
 
+# Runtime packages
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -15,24 +16,27 @@ ENV RAILS_ENV="production" \
 
 FROM base AS build
 
+# Build packages (Node.js & Yarn)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config nodejs npm && \
     npm install --global yarn && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
+# Install Ruby gems
 COPY Gemfile* ./
 RUN if [ ! -f Gemfile.lock ]; then bundle lock --add-platform x86_64-linux; fi
 RUN bundle install
 
+# Install JS dependencies
 COPY package.json yarn.lock* ./
 RUN yarn install --frozen-lockfile || yarn install
 
 COPY . .
 
-# CORRECTED SCRIPT: Aapki package.json ke mutabiq
+# STEP 1: Build React Assets
 RUN npm run build:react
 
-# Assets precompile
+# STEP 2: Precompile Rails Assets
 RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
 
 FROM base

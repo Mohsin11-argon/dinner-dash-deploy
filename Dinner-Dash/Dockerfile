@@ -1,10 +1,9 @@
-# 
+
 ARG RUBY_VERSION=3.2.3
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 WORKDIR /rails
 
-# Runtime packages
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
@@ -16,24 +15,21 @@ ENV RAILS_ENV="production" \
 
 FROM base AS build
 
-# Node.js aur Yarn install
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config nodejs npm && \
     npm install --global yarn && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Ruby Gems
 COPY Gemfile* ./
 RUN if [ ! -f Gemfile.lock ]; then bundle lock --add-platform x86_64-linux; fi
 RUN bundle install
 
-# JS Dependencies
 COPY package.json yarn.lock* ./
 RUN yarn install --frozen-lockfile || yarn install
 
 COPY . .
 
-# REACT BUILD FIX: Aapki package.json ki sahi script yahan use hogi
+# CORRECTED SCRIPT: Aapki package.json ke mutabiq
 RUN npm run build:react
 
 # Assets precompile

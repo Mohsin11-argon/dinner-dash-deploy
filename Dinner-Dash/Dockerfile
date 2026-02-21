@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# 
 ARG RUBY_VERSION=3.2.3
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
@@ -16,7 +16,7 @@ ENV RAILS_ENV="production" \
 
 FROM base AS build
 
-# Node.js aur Yarn install karein
+# Node.js aur Yarn install
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config nodejs npm && \
     npm install --global yarn && \
@@ -33,8 +33,10 @@ RUN yarn install --frozen-lockfile || yarn install
 
 COPY . .
 
-# ASSETS FIX: Pehle JS build karein phir assets precompile
-RUN npm run build
+# REACT BUILD FIX: Aapki package.json ki sahi script yahan use hogi
+RUN npm run build:react
+
+# Assets precompile
 RUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile
 
 FROM base
@@ -46,5 +48,4 @@ RUN useradd rails --create-home --shell /bin/bash && \
 USER rails:rails
 
 EXPOSE 80
-# Port 80 par chalane ke liye
 CMD ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "80"]
